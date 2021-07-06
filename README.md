@@ -12,7 +12,7 @@ A batteries included template for kick starting a TypeScript Cloudflare worker p
 4. wrangler login
    - login
    - if message "waiting for api token very long" -> https://github.com/cloudflare/wrangler/issues/1703
-5. put your AccountId into wrangler.toml (wrangler whoami)
+5. put your AccountId into wrangler.toml (wrangler whoami)  
    name = "my-worker"
    account_id = "$yourAccountId"
 6. wranger preview --watch
