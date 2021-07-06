@@ -37,6 +37,21 @@ const getNode = (net: string): NodeUrls => {
   }
 }
 
+const checkBalance = `
+new return, rl(\`rho:registry:lookup\`), RevVaultCh, vaultCh in {
+  rl!(\`rho:rchain:revVault\`, *RevVaultCh) |
+  for (@(_, RevVault) <- RevVaultCh) {
+    @RevVault!("findOrCreate", "1111yNahhR8CYJ7ijaJsyDU4zzZ1CrJgdLZtK4fve7zifpDK3crzZ", *vaultCh) |
+    for (@maybeVault <- vaultCh) {
+      match maybeVault {
+        (true, vault) => @vault!("balance", *return)
+        (false, err)  => return!(err)
+      }
+    }
+  }
+}
+`
+
 export type ExploreWorkerArgs = { node: NodeUrls; code: string }
 
 const readRequestBody = async (request: Request) => {
@@ -54,25 +69,35 @@ const exploreRequest = async (request: Request) => {
   // Construct the cache key from the cache URL
   const { net, code } = await readRequestBody(request)
   console.log(net)
+
   if (net && code) {
     const node = getNode(net)
     const { exploreDeploy } = createRnodeService(node)
     const result = await exploreDeploy({
-      code: code,
+      code: checkBalance,
     })
+
     return { code: code, result: result }
   } else {
     return { code: '', result: '' }
   }
 }
 
-export async function handleRequest(request: Request): Promise<Response> {
-  //const request = event.request
+export async function handleRequest(event: FetchEvent): Promise<Response> {
+  const request = event.request
   if (request.method === 'POST') {
-    const { code, result } = await exploreRequest(request)
+    //  const { code, result } = await exploreRequest(request)
 
+    const hashCode = (s: string) =>
+      s.split('').reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0)
+        return a & a
+      }, 0)
     // cache response
-    const cacheUrl = new URL(code)
+    const concatUrl = request.url + hashCode('code').toString()
+    console.log(concatUrl)
+    const cacheUrl = new URL(concatUrl)
+    //const cacheUrl = new URL('httpcode')
     const cacheKey = new Request(cacheUrl.toString(), request)
     const cache = caches.default
 
@@ -80,7 +105,7 @@ export async function handleRequest(request: Request): Promise<Response> {
 
     if (!response) {
       // Must use Response constructor to inherit all of response's fields
-      const response = new Response(JSON.stringify(result), { status: 200 })
+      const response = new Response(JSON.stringify('result'), { status: 200 })
 
       // Cache API respects Cache-Control headers. Setting s-max-age to 10
       // will limit the response to be in cache for 10 seconds max
@@ -91,7 +116,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       // Store the fetched response as cacheKey
       // Use waitUntil so you can return the response without blocking on
       // writing to cache
-      //event.waitUntil(cache.put(cacheKey, response.clone()))
+      event.waitUntil(cache.put(cacheKey, response.clone()))
       return response
     }
     return response
