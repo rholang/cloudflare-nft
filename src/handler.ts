@@ -66,8 +66,8 @@ const exploreRequest = async (request: Request) => {
   }
 }
 
-export async function handleRequest(event: FetchEvent): Promise<Response> {
-  const request = event.request
+export async function handleRequest(request: Request): Promise<Response> {
+  //const request = event.request
   if (request.method === 'POST') {
     const { code, result } = await exploreRequest(request)
 
@@ -91,7 +91,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
       // Store the fetched response as cacheKey
       // Use waitUntil so you can return the response without blocking on
       // writing to cache
-      event.waitUntil(cache.put(cacheKey, response.clone()))
+      //event.waitUntil(cache.put(cacheKey, response.clone()))
       return response
     }
     return response
