@@ -1,7 +1,6 @@
 import { handleRequest } from '../src/handler'
 import makeServiceWorkerEnv from 'service-worker-mock'
-import { ne } from 'connectors/rnode-https-js'
-
+import 'isomorphic-fetch'
 declare var global: any
 
 describe('handle', () => {
@@ -28,7 +27,7 @@ describe('handle', () => {
 
     const body = { net: 'testnet', code: checkBalance }
 
-    const result = await handleRequest(
+    /*const result = await handleRequest(
       new Request('/', {
         body: JSON.stringify(body),
         method: 'POST',
@@ -36,10 +35,18 @@ describe('handle', () => {
           'content-type': 'application/json;charset=UTF-8',
         },
       }),
+    )*/
+    console.log('test')
+    const result = await fetch(
+      'https://71c37243bb5507f453fb5b93f055dac7.cloudflareworkers.com/.edgeworker-fiddle-init-preview/d41f2196b50547c3fe7cc122e7f9d9785b50079424dcc3747d38a5d569509c5f1example.com/',
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+          'content-type': 'application/json;charset=UTF-8',
+        },
+      },
     )
-    console.log(result)
     expect(result.status).toEqual(200)
-    const text = await result.text()
-    expect(text).toEqual('request method: GET')
   })
 })
