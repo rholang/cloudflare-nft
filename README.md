@@ -6,13 +6,17 @@ A batteries included template for kick starting a TypeScript Cloudflare worker p
 
 ## 🔋 Getting Started
 
-This template is meant to be used with [Wrangler](https://github.com/cloudflare/wrangler). If you are not already familiar with the tool, we recommend that you install the tool and configure it to work with your [Cloudflare account](https://dash.cloudflare.com). Documentation can be found [here](https://developers.cloudflare.com/workers/tooling/wrangler/).
-
-To generate using Wrangler, run this command:
-
-```bash
-wrangler generate my-ts-project https://github.com/cloudflare/worker-typescript-template
-```
+1. clone project
+2. yarn install
+3. yarn global add @cloudflare/wrangler
+4. wrangler login
+   - login
+   - if message "waiting for api token very long" -> https://github.com/cloudflare/wrangler/issues/1703
+5. put your AccountId into wrangler.toml (wrangler whoami)
+   name = "my-worker"
+   account_id = "$yourAccountId"
+6. wranger preview --watch
+7. wrangler publish
 
 ### 👩 💻 Developing
 
