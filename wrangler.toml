@@ -1,0 +1,11 @@
+name = "worker-typescript-template"
+type = "javascript"
+zone_id = ""
+account_id = "dbc26d4a30607daa717dab293425af18"
+route = ""
+workers_dev = true
+
+[build]
+command = "yarn install && yarn build"
+[build.upload]
+format = "service-worker"
