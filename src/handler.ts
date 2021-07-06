@@ -82,8 +82,6 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
     const net = searchParams.get('net')
     const code = searchParams.get('code')
     if (net && code) {
-      const { result } = await exploreRequest(net, code)
-
       //console.log(codeParam)
       const hashCode = (s: string) =>
         s.split('').reduce((a, b) => {
@@ -102,6 +100,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
       const response = await cache.match(cacheKey)
 
       if (!response) {
+        const { result } = await exploreRequest(net, code)
         // Must use Response constructor to inherit all of response's fields
         const response = new Response(JSON.stringify(result), { status: 200 })
 
