@@ -110,7 +110,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
       const storeValue = await KVSTORE.get(hashedCodeKey)
 
       if (storeValue) {
-        return new Response(JSON.stringify('get'), {
+        return new Response(JSON.stringify(storeValue), {
           status: 200,
         })
       } else {
