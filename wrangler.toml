@@ -4,6 +4,9 @@ zone_id = ""
 account_id = "dbc26d4a30607daa717dab293425af18"
 route = ""
 workers_dev = true
+kv_namespaces = [  
+  { binding = "KVSTORE", id = "4a6546dd78494be2bb2ace7440d48f75", preview_id = "4a6546dd78494be2bb2ace7440d48f75" },
+ ]
 
 [build]
 command = "yarn build"

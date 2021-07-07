@@ -54,6 +54,10 @@ new return, rl(\`rho:registry:lookup\`), RevVaultCh, vaultCh in {
 
 export type ExploreWorkerArgs = { node: NodeUrls; code: string }
 
+declare global {
+  const KVSTORE: KVNamespace
+}
+
 const readRequestBody = async (request: Request) => {
   const { headers } = request
   const contentType = headers.get('content-type') || ''
@@ -67,67 +71,66 @@ const readRequestBody = async (request: Request) => {
 
 const exploreRequest = async (net: string, code: string) => {
   const node = getNode(net)
+
   const { exploreDeploy } = createRnodeService(node)
   const result = await exploreDeploy({
     code: code,
   })
 
-  return { code: code, result: result }
+  return JSON.stringify(result)
 }
+
+const hashCode = (s: string) =>
+  s.split('').reduce((a, b) => {
+    a = (a << 5) - a + b.charCodeAt(0)
+    return a & a
+  }, 0)
 
 export async function handleRequest(event: FetchEvent): Promise<Response> {
   const request = event.request
   if (request.method === 'GET') {
     const { searchParams } = new URL(request.url)
-    const net = searchParams.get('net')
-    const code = searchParams.get('code')
-    if (net && code) {
-      //console.log(codeParam)
-      const hashCode = (s: string) =>
-        s.split('').reduce((a, b) => {
-          a = (a << 5) - a + b.charCodeAt(0)
-          return a & a
-        }, 0)
-      /* Cache matching */
-      const { hostname } = new URL(request.url)
-      const concatUrl = 'https://' + hostname + '/' + code
+    const netParams = searchParams.get('net')
 
-      const cacheUrl = new URL(request.url)
-      //const cacheUrl = new URL('httpcode')
+    const codeParams = searchParams.get('code')
+    //console.log(codeParams)
+    if (netParams && codeParams) {
+      const code = codeParams
+      //const { hostname } = new URL(request.url)
+      //const concatUrl = 'https://' + hostname + '/' + code
+
+      const hashedCodeKey = hashCode(code).toString()
+      /*const cacheUrl = new URL(request.url)
       const cacheKey = new Request(cacheUrl.toString(), request)
       const cache = caches.default
 
       const response = await cache.match(cacheKey)
-      console.log(response)
+     */
 
-      if (!response) {
-        //const { result } = await exploreRequest(net, code)
-        // Must use Response constructor to inherit all of response's fields
-        const response = new Response(JSON.stringify('notcachedresponse'), {
+      const storeValue = await KVSTORE.get(hashedCodeKey)
+
+      if (storeValue) {
+        return new Response(JSON.stringify('get'), {
           status: 200,
         })
-
-        // Cache API respects Cache-Control headers. Setting s-max-age to 10
-        // will limit the response to be in cache for 10 seconds max
-
-        // Any changes made to the response here will be reflected in the cached value
-        response.headers.append('Cache-Control', 'public maxage=31556952')
-
-        // Store the fetched response as cacheKey
-        // Use waitUntil so you can return the response without blocking on
-        // writing to cache
-        event.waitUntil(cache.put(cacheKey, response.clone()))
-        return response
       } else {
-        const response = new Response(JSON.stringify('cachedresponse'), {
-          status: 200,
-        })
-        response.headers.append('Cache-Control', 'public maxage=31556952')
-        return response
+        try {
+          const result = await exploreRequest('netParams', code)
+
+          const storeKey = await KVSTORE.put(hashedCodeKey, result.toString())
+          return new Response(JSON.stringify(result), {
+            status: 200,
+          })
+        } catch (err) {
+          return new Response(err, {
+            status: 500,
+          })
+        }
       }
+    } else {
+      const response = new Response('Expected Arguments', { status: 500 })
+      return response
     }
-    const response = new Response('Expected Arguments', { status: 500 })
-    return response
   } else {
     const response = new Response('Expected POST', { status: 500 })
     return response
