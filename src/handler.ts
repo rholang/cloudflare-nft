@@ -110,17 +110,21 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
       const storeValue = await KVSTORE.get(hashedCodeKey)
 
       if (storeValue) {
-        return new Response(JSON.stringify(storeValue), {
+        const response = new Response(JSON.stringify(storeValue), {
           status: 200,
         })
+        response.headers.append('Cache-Control', 's-maxage=86400')
+        return response
       } else {
         try {
           const result = await exploreRequest('netParams', code)
 
           const storeKey = await KVSTORE.put(hashedCodeKey, result.toString())
-          return new Response(JSON.stringify(result), {
+          const response = new Response(JSON.stringify(result), {
             status: 200,
           })
+          response.headers.append('Cache-Control', 's-maxage=86400')
+          return response
         } catch (err) {
           return new Response(err, {
             status: 500,
